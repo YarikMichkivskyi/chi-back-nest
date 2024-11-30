@@ -1,4 +1,6 @@
-- .env file fix
 - @Expose @Exclude настроить выводы, чтобы не было лишнего
 - enums для всех перечислений
 - pagination
+
+Fixed:
+- .env file fix - fixed

@@ -13,34 +13,13 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
-// const DataSource = TypeOrmModule.forRoot({
-//     type: 'postgres',
-//     host: process.env.DB_HOST,
-//     port: Number(process.env.DB_PORT),
-//     username: process.env.DB_USER,
-//     password: process.env.DB_PASSWORD,
-//     database: process.env.DB_NAME,
-//     entities: [User, Comment, Exhibit],
-//     synchronize: false,
-// });
-
-const DataSource = TypeOrmModule.forRoot({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'exhibits_admin',
-    password: 'password',
-    database: 'exhibits_db',
-    entities: [User, Comment, Exhibit],
-    synchronize: false,
-});
-
 @Module({
     imports: [
-        NotificationsModule,
         ConfigModule.forRoot({
             isGlobal: true,
+            envFilePath: `.env`,
         }),
+        NotificationsModule,
         ServeStaticModule.forRoot({
             rootPath: join(__dirname, '..', 'static'),
             serveRoot: '/static',
@@ -49,7 +28,16 @@ const DataSource = TypeOrmModule.forRoot({
         UsersModule,
         ExhibitsModule,
         CommentsModule,
-        DataSource,
+        TypeOrmModule.forRoot({
+            type: 'postgres',
+            host: process.env.DB_HOST,
+            port: Number(process.env.DB_PORT),
+            username: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            entities: [User, Comment, Exhibit],
+            synchronize: false,
+        }),
         TokenModule
     ],
 })
