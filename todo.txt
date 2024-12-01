@@ -2,10 +2,11 @@
 
 Optional:
 - enums для всех перечислений
-- pagination
+- рефакторинг dto/types
 - refresh-token
 - утилита проверяющая .env и миграции
 
 Fixed:
 - .env file fix - fixed
 - @Expose @Exclude настроить выводы, чтобы не было лишнего
+- pagination

@@ -48,35 +48,43 @@ export class ExhibitsService {
         return plainToInstance(ExhibitDetailDto, exhibitWithRelations, { excludeExtraneousValues: true });
     }
 
-    async findAll(): Promise<ExhibitInListDto[]> {
-        const exhibits = await this.exhibitRepository.find({
+    async findAll(page: number, limit: number): Promise<{ data: ExhibitInListDto[]; total: number }> {
+        const [result, total] = await this.exhibitRepository.findAndCount({
             relations: ['owner', 'comments'],
+            skip: (page - 1) * limit,
+            take: limit,
         });
 
-        return plainToInstance(
+        const data = plainToInstance(
             ExhibitInListDto,
-            exhibits.map((exhibit) => ({
+            result.map((exhibit) => ({
                 ...exhibit,
                 commentCount: exhibit.comments?.length || 0,
             })),
-            { excludeExtraneousValues: true }
+            { excludeExtraneousValues: true },
         );
+
+        return { data, total };
     }
 
-    async findByUser(userId: number): Promise<ExhibitInListDto[]> {
-        const exhibits = await this.exhibitRepository.find({
+    async findByUser(userId: number, page: number, limit: number): Promise<{ data: ExhibitInListDto[]; total: number }> {
+        const [result, total] = await this.exhibitRepository.findAndCount({
             relations: ['owner', 'comments'],
-            where:{ownerId:userId},
+            where: { ownerId: userId },
+            skip: (page - 1) * limit,
+            take: limit,
         });
 
-        return plainToInstance(
+        const data = plainToInstance(
             ExhibitInListDto,
-            exhibits.map((exhibit) => ({
+            result.map((exhibit) => ({
                 ...exhibit,
                 commentCount: exhibit.comments?.length || 0,
             })),
-            { excludeExtraneousValues: true }
+            { excludeExtraneousValues: true },
         );
+
+        return { data, total };
     }
 
     async findOne(id: number): Promise<ExhibitDetailDto> {

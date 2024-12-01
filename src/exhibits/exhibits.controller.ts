@@ -8,7 +8,7 @@ import {
     UseGuards,
     Req,
     UploadedFile,
-    UseInterceptors, BadRequestException,
+    UseInterceptors, BadRequestException, Query,
 } from '@nestjs/common';
 import {
     ApiBearerAuth,
@@ -16,7 +16,7 @@ import {
     ApiResponse,
     ApiTags,
     ApiConsumes,
-    ApiBody,
+    ApiBody, ApiQuery,
 } from '@nestjs/swagger';
 import { ExhibitsService } from './exhibits.service';
 import { CreateExhibitDto } from './dto/create-exhibit.dto';
@@ -79,8 +79,8 @@ export class ExhibitsController {
             ...createExhibitDto,
             imageUrl: `/static/uploads/${image.filename}`,
         };
-        const exhibit = this.exhibitsService.create(data, owner.id);
-        return exhibit;
+
+        return this.exhibitsService.create(data, owner.id);
     }
 
     @Get()
@@ -89,8 +89,25 @@ export class ExhibitsController {
         status: 200,
         description: 'List of exhibits retrieved successfully',
     })
-    async findAll() {
-        return { data: await this.exhibitsService.findAll() };
+    @ApiQuery({
+        name: 'page',
+        required: false,
+        description: 'Page number for pagination (default: 1)',
+        schema: { type: 'integer', example: 1 },
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+        description: 'Number of items per page (default: 10, max: 100)',
+        schema: { type: 'integer', example: 10 },
+    })
+    async findAll(
+        @Query('page') page = 1,
+        @Query('limit') limit = 10,
+    ) {
+        const normalizedPage = Math.max(1, page);
+        const normalizedLimit = Math.min(Math.max(1, limit), 100);
+        return this.exhibitsService.findAll(normalizedPage, normalizedLimit);
     }
 
     @UseGuards(JwtAuthGuard)
@@ -105,9 +122,27 @@ export class ExhibitsController {
         status: 401,
         description: 'Unauthorized',
     })
-    async findMyPosts(@Req() req: any) {
+    @ApiQuery({
+        name: 'page',
+        required: false,
+        description: 'Page number for pagination (default: 1)',
+        schema: { type: 'integer', example: 1 },
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+        description: 'Number of items per page (default: 10, max: 100)',
+        schema: { type: 'integer', example: 10 },
+    })
+    async findMyPosts(
+        @Req() req: any,
+        @Query('page') page = 1,
+        @Query('limit') limit = 10,
+    ) {
         const userId = req.user.sub;
-        return { data: await this.exhibitsService.findByUser(userId)};
+        const normalizedPage = Math.max(1, page);
+        const normalizedLimit = Math.min(Math.max(1, limit), 100);
+        return this.exhibitsService.findByUser(userId, normalizedPage, normalizedLimit);
     }
 
     @Get(':id')
