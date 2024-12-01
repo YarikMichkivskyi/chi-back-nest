@@ -43,7 +43,7 @@ export class CommentsController {
     @Get()
     async getComments(@Param('exhibitId', ParseIntPipe) exhibitId: number) {
         if (exhibitId <= 0) {
-            throw new Error('Exhibit ID must be a positive number');
+            throw new BadRequestException('Exhibit ID must be a positive number');
         }
         return this.commentsService.findCommentsByExhibit(exhibitId);
     }

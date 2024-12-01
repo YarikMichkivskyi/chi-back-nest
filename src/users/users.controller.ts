@@ -47,8 +47,7 @@ export class UsersController {
         if (!user) {
             throw new NotFoundException('User not found');
         }
-
-        return user;
+        return plainToInstance(User, user, { excludeExtraneousValues: true });
     }
 
     @ApiOperation({ summary: 'Get user by ID' })
@@ -61,11 +60,11 @@ export class UsersController {
         if (id <= 0) {
             throw new BadRequestException('ID must be a positive integer');
         }
-        const user = await this.usersService.findById(id);
+        const user:User = await this.usersService.findById(id);
         if (!user) {
-            throw new Error('User not found');
+            throw new NotFoundException('User not found');
         }
-        return user;
+        return plainToInstance(User, user, { excludeExtraneousValues: true });
     }
 
 

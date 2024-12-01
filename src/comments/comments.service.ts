@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Comment } from './comments.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Exhibit } from '../exhibits/exhibits.entity';
+import { CommentDto } from './dto/comment.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class CommentsService {
@@ -28,21 +30,21 @@ export class CommentsService {
         return this.commentsRepository.save(comment);
     }
 
-    async findCommentsByExhibit(exhibitId: number): Promise<Comment[]> {
+    async findCommentsByExhibit(exhibitId: number): Promise<CommentDto[]> {
         if (exhibitId <= 0) {
             throw new NotFoundException('Exhibit ID must be a positive number');
         }
 
         const comments = await this.commentsRepository.find({
             where: { exhibit: { id: exhibitId } },
-            relations: ['exhibit', 'owner'],
+            relations: ['owner'],
         });
 
         if (comments.length === 0) {
             throw new NotFoundException('No comments found for this exhibit');
         }
 
-        return comments;
+        return plainToInstance(CommentDto, comments, { excludeExtraneousValues: true });
     }
 
     async deleteComment(commentId: number, userId: number): Promise<void> {

@@ -8,6 +8,9 @@ import { unlink } from 'fs';
 import { promisify } from 'util';
 import { join } from 'path';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { ExhibitInListDto } from './dto/exhibit-in-list.dto';
+import { plainToInstance } from 'class-transformer';
+import { ExhibitDetailDto } from './dto/exhibit-detail.dto';
 
 const unlinkAsync = promisify(unlink);
 
@@ -21,7 +24,7 @@ export class ExhibitsService {
         private readonly notificationsGateway: NotificationsGateway,
     ) {}
 
-    async create(data: CreateExhibitDto, ownerId: number): Promise<Exhibit> {
+    async create(data: CreateExhibitDto, ownerId: number): Promise<ExhibitDetailDto> {
         const owner = await this.userRepository.findOne({ where: { id: ownerId } });
         if (!owner) {
             throw new NotFoundException('User not found');
@@ -37,44 +40,80 @@ export class ExhibitsService {
 
         this.notificationsGateway.sendNotification(ownerId);
 
-        return savedExhibit;
-    }
-
-    async findAll(): Promise<Exhibit[]> {
-        return this.exhibitRepository.find({
-            relations: ['owner'],
+        const exhibitWithRelations = await this.exhibitRepository.findOne({
+            where: { id: savedExhibit.id },
+            relations: ['owner', 'comments', 'comments.owner'],
         });
+
+        return plainToInstance(ExhibitDetailDto, exhibitWithRelations, { excludeExtraneousValues: true });
     }
 
-    async findByUser(userId: number): Promise<Exhibit[]> {
-        return this.exhibitRepository.find({
-            where: { ownerId: userId },
-            relations: ['owner'], // Включаем владельца в результат
+    async findAll(): Promise<ExhibitInListDto[]> {
+        const exhibits = await this.exhibitRepository.find({
+            relations: ['owner', 'comments'],
         });
+
+        return plainToInstance(
+            ExhibitInListDto,
+            exhibits.map((exhibit) => ({
+                ...exhibit,
+                commentCount: exhibit.comments?.length || 0,
+            })),
+            { excludeExtraneousValues: true }
+        );
     }
 
-    async findOne(id: number): Promise<Exhibit> {
+    async findByUser(userId: number): Promise<ExhibitInListDto[]> {
+        const exhibits = await this.exhibitRepository.find({
+            relations: ['owner', 'comments'],
+            where:{ownerId:userId},
+        });
+
+        return plainToInstance(
+            ExhibitInListDto,
+            exhibits.map((exhibit) => ({
+                ...exhibit,
+                commentCount: exhibit.comments?.length || 0,
+            })),
+            { excludeExtraneousValues: true }
+        );
+    }
+
+    async findOne(id: number): Promise<ExhibitDetailDto> {
         const exhibit = await this.exhibitRepository.findOne({
             where: { id },
-            relations: ['owner', 'comments'],
+            relations: ['owner', 'comments', 'comments.owner'],
         });
 
         if (!exhibit) {
             throw new NotFoundException('Exhibit not found');
         }
 
-        return exhibit;
+        return plainToInstance(
+            ExhibitDetailDto,
+            {
+                ...exhibit,
+                commentCount: exhibit.comments?.length || 0,
+            },
+            { excludeExtraneousValues: true }
+        );
     }
 
-    async remove(id: number, ownerId: number): Promise<void> {
-        const exhibit = await this.findOne(id);
+    async remove(id: number, ownerId: number): Promise<ExhibitDetailDto> {
+        const exhibit = await this.exhibitRepository.findOne({
+            where: { id },
+            relations: ['owner', 'comments', 'comments.owner'],
+        });
 
-        if (exhibit.ownerId !== ownerId) {
+        if (!exhibit) {
+            throw new NotFoundException('Exhibit not found');
+        }
+
+        if (exhibit.owner.id !== ownerId) {
             throw new ForbiddenException('You are not the owner of this exhibit');
         }
 
         const filePath = join(process.cwd(), exhibit.imageUrl);
-        console.log(filePath);
         try {
             await unlinkAsync(filePath);
             console.log(`File deleted: ${filePath}`);
@@ -83,5 +122,7 @@ export class ExhibitsService {
         }
 
         await this.exhibitRepository.remove(exhibit);
+
+        return plainToInstance(ExhibitDetailDto, exhibit, { excludeExtraneousValues: true });
     }
 }

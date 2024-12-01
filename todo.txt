@@ -1,6 +1,11 @@
-- @Expose @Exclude настроить выводы, чтобы не было лишнего
+- Front integration + Docker + Deployment
+
+Optional:
 - enums для всех перечислений
 - pagination
+- refresh-token
+- утилита проверяющая .env и миграции
 
 Fixed:
 - .env file fix - fixed
+- @Expose @Exclude настроить выводы, чтобы не было лишнего

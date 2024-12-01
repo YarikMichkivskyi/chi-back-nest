@@ -20,6 +20,7 @@ export class User {
     @Exclude()
     password: string;
 
+    @Expose()
     @Column({ default: false })
     @ApiProperty({
         example: false,
@@ -33,8 +34,4 @@ export class User {
         description: 'Exhibits created by the user',
     })
     exhibits: Exhibit[];
-
-    // @OneToMany(() => Comment, (comment) => comment.owner)
-    // @ApiProperty({ type: () => [Comment], description: 'Comments made by the user' })
-    // comments: Comment[];
 }

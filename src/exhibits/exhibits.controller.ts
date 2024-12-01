@@ -24,6 +24,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { ExhibitInListDto } from './dto/exhibit-in-list.dto';
 
 @ApiTags('exhibits')
 @Controller('exhibits')
@@ -78,7 +79,8 @@ export class ExhibitsController {
             ...createExhibitDto,
             imageUrl: `/static/uploads/${image.filename}`,
         };
-        return this.exhibitsService.create(data, owner.id);
+        const exhibit = this.exhibitsService.create(data, owner.id);
+        return exhibit;
     }
 
     @Get()
@@ -88,7 +90,7 @@ export class ExhibitsController {
         description: 'List of exhibits retrieved successfully',
     })
     async findAll() {
-        return this.exhibitsService.findAll();
+        return { data: await this.exhibitsService.findAll() };
     }
 
     @UseGuards(JwtAuthGuard)
@@ -105,7 +107,7 @@ export class ExhibitsController {
     })
     async findMyPosts(@Req() req: any) {
         const userId = req.user.sub;
-        return this.exhibitsService.findByUser(userId);
+        return { data: await this.exhibitsService.findByUser(userId)};
     }
 
     @Get(':id')
