@@ -74,6 +74,7 @@ export class ExhibitsService {
             relations: ['owner', 'comments'],
             skip: (page - 1) * limit,
             take: limit,
+            order:{createdAt:'DESC'}
         });
 
         const data = plainToInstance(
@@ -104,6 +105,7 @@ export class ExhibitsService {
             where: { ownerId: userId },
             skip: (page - 1) * limit,
             take: limit,
+            order:{createdAt:'DESC'}
         });
 
         const data = plainToInstance(

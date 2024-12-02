@@ -38,7 +38,6 @@ export class UsersController {
     @Get('my-profile')
     async getMyProfile(@Req() req: any) {
         const userId = Number(req.user.sub);
-        console.log(req.user);
         if (!userId || userId <= 0) {
             throw new BadRequestException('Invalid user ID in token');
         }

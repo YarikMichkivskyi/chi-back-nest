@@ -15,7 +15,7 @@ export class AuthService {
         const user = await this.usersService.findByUsername(username);
 
         if (!user) {
-            throw new UnauthorizedException();
+            throw new UnauthorizedException('Invalid credentials');
         }
 
         if (user && (await this.comparePasswords(password, user.password))) {

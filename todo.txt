@@ -1,6 +1,7 @@
 - Front integration + Docker + Deployment
 
 Optional:
+- uuid вместо времени в названии static
 - enums для всех перечислений
 - рефакторинг dto/types
 - refresh-token
