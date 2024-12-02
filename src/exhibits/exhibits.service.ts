@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+    Injectable,
+    NotFoundException,
+    ForbiddenException,
+    BadRequestException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exhibit } from './exhibits.entity';
@@ -24,8 +29,13 @@ export class ExhibitsService {
         private readonly notificationsGateway: NotificationsGateway,
     ) {}
 
-    async create(data: CreateExhibitDto, ownerId: number): Promise<ExhibitDetailDto> {
-        const owner = await this.userRepository.findOne({ where: { id: ownerId } });
+    async create(
+        data: CreateExhibitDto,
+        ownerId: number,
+    ): Promise<ExhibitDetailDto> {
+        const owner = await this.userRepository.findOne({
+            where: { id: ownerId },
+        });
         if (!owner) {
             throw new NotFoundException('User not found');
         }
@@ -45,11 +55,22 @@ export class ExhibitsService {
             relations: ['owner', 'comments', 'comments.owner'],
         });
 
-        return plainToInstance(ExhibitDetailDto, exhibitWithRelations, { excludeExtraneousValues: true });
+        return plainToInstance(ExhibitDetailDto, exhibitWithRelations, {
+            excludeExtraneousValues: true,
+        });
     }
 
-    async findAll(page: number, limit: number): Promise<{ data: ExhibitInListDto[]; total: number }> {
+    async findAll(
+        page: number,
+        limit: number,
+    ): Promise<{
+        data: ExhibitInListDto[];
+        total: number;
+        page: number;
+        lastPage: number;
+    }> {
         const [result, total] = await this.exhibitRepository.findAndCount({
+            //todo new dto
             relations: ['owner', 'comments'],
             skip: (page - 1) * limit,
             take: limit,
@@ -64,10 +85,20 @@ export class ExhibitsService {
             { excludeExtraneousValues: true },
         );
 
-        return { data, total };
+        return { data, total, page, lastPage: Math.ceil(total / limit) };
     }
 
-    async findByUser(userId: number, page: number, limit: number): Promise<{ data: ExhibitInListDto[]; total: number }> {
+    async findByUser(
+        userId: number,
+        page: number,
+        limit: number,
+    ): Promise<{
+        //todo new dto
+        data: ExhibitInListDto[];
+        total: number;
+        page: number;
+        lastPage: number;
+    }> {
         const [result, total] = await this.exhibitRepository.findAndCount({
             relations: ['owner', 'comments'],
             where: { ownerId: userId },
@@ -84,7 +115,7 @@ export class ExhibitsService {
             { excludeExtraneousValues: true },
         );
 
-        return { data, total };
+        return { data, total, page, lastPage: Math.ceil(total / limit) };
     }
 
     async findOne(id: number): Promise<ExhibitDetailDto> {
@@ -103,7 +134,7 @@ export class ExhibitsService {
                 ...exhibit,
                 commentCount: exhibit.comments?.length || 0,
             },
-            { excludeExtraneousValues: true }
+            { excludeExtraneousValues: true },
         );
     }
 
@@ -118,7 +149,9 @@ export class ExhibitsService {
         }
 
         if (exhibit.owner.id !== ownerId) {
-            throw new ForbiddenException('You are not the owner of this exhibit');
+            throw new ForbiddenException(
+                'You are not the owner of this exhibit',
+            );
         }
 
         const filePath = join(process.cwd(), exhibit.imageUrl);
@@ -131,6 +164,8 @@ export class ExhibitsService {
 
         await this.exhibitRepository.remove(exhibit);
 
-        return plainToInstance(ExhibitDetailDto, exhibit, { excludeExtraneousValues: true });
+        return plainToInstance(ExhibitDetailDto, exhibit, {
+            excludeExtraneousValues: true,
+        });
     }
 }

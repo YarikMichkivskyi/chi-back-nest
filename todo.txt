@@ -5,6 +5,8 @@ Optional:
 - рефакторинг dto/types
 - refresh-token
 - утилита проверяющая .env и миграции
+- ApiRateLimitMiddleware
+- сервис для картинок
 
 Fixed:
 - .env file fix - fixed
